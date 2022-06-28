@@ -1,0 +1,20 @@
+{
+    "name": "38-grupe-server",
+    "version": "1.0.0",
+    "description": "",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "dev": "nodemon ./index.js",
+        "prod": "",
+        "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests",
+        "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll --passWithNoTests"
+    },
+    "keywords": [],
+    "author": "Rimantas",
+    "license": "MIT",
+    "devDependencies": {
+        "jest": "^28.1.1",
+        "nodemon": "^2.0.16"
+    }
+}
