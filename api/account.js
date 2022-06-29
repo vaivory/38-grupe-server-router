@@ -20,13 +20,6 @@ handler.account = async (data, callback) => {
 
 handler._innerMethods = {};
 
-// GET
-handler._innerMethods.get = (data, callback) => {
-    return callback(200, {
-        msg: 'Account: get'
-    });
-}
-
 // POST - sukuriame paskyra
 handler._innerMethods.post = async (data, callback) => {
     const { payload } = data;
@@ -105,6 +98,46 @@ handler._innerMethods.post = async (data, callback) => {
 }
 
 // PUT (kapitalinis info pakeistimas) / PATCH (vienos info dalies pakeitimas)
+handler._innerMethods.put = (data, callback) => {
+    return callback(200, {
+        msg: 'Account: put',
+    });
+}
+
+// GET
+handler._innerMethods.get = async (data, callback) => {
+
+    // 1) suzinoti apie kuri vartotoja norima gauti duomenis
+    const email = data.searchParams.get('email');
+
+    // 2) Patikriname ar gautas email yra email formato
+
+    // 3) Bandom perskaityti vartotojo duomenis
+    // - jei ERROR - vartotojas neegzistuoja
+    // - jei OK - vartotojas egzistuoja ir gavom jo duomenis
+    const [readErr, readMsg] = await file.read('accounts', email + '.json');
+    if (readErr) {
+        return callback(404, {
+            msg: 'Toks vartotojas neegzistouja, arba nepavyko gauti duomenu del teisiu trukumo',
+        });
+    }
+
+    const [userErr, userData] = utils.parseJSONtoObject(readMsg);
+    if (userErr) {
+        return callback(500, {
+            msg: 'Nepavyko nuskaityti duomenu',
+        });
+    }
+
+    delete userData.pass;
+
+    return callback(200, {
+        msg: userData,
+    });
+}
+
+// PUT (kapitalinis info pakeistimas)
+// PATCH (vienos info dalies pakeitimas)
 handler._innerMethods.put = (data, callback) => {
     return callback(200, {
         msg: 'Account: put',
