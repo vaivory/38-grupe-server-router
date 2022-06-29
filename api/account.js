@@ -1,19 +1,20 @@
+import { file } from "../lib/file.js";
 import { IsValid } from "../lib/is-valid/IsValid.js";
 import { utils } from "../lib/utils.js";
 
 const handler = {};
 
-handler.account = (data, callback) => {
+handler.account = async (data, callback) => {
     // kliento intensija - ka jis nori daryti?
     const acceptableMethods = ['get', 'post', 'put', 'delete'];
 
     if (acceptableMethods.includes(data.httpMethod)) {
         const httpMethodFunc = handler._innerMethods[data.httpMethod];
-        return httpMethodFunc(data, callback);
+        return await httpMethodFunc(data, callback);
     }
 
     return callback(405, {
-        msg: 'Tavo norimas HTTPmethod yra nepalaikomas'
+        msg: 'Tavo norimas HTTPmethod yra nepalaikomas',
     });
 }
 
@@ -27,7 +28,7 @@ handler._innerMethods.get = (data, callback) => {
 }
 
 // POST - sukuriame paskyra
-handler._innerMethods.post = (data, callback) => {
+handler._innerMethods.post = async (data, callback) => {
     const { payload } = data;
 
     /*
@@ -77,7 +78,13 @@ handler._innerMethods.post = (data, callback) => {
         - jei ne - tęsiam
     */
 
-
+    // accounts/${user-email}.json
+    const [readErr] = await file.read('accounts', email + '.json');
+    if (!readErr) {
+        return callback(400, {
+            msg: 'Paskyra jau egzistuoja',
+        })
+    }
 
     /*
     3) issaugoti duomenis (payload)
@@ -85,8 +92,12 @@ handler._innerMethods.post = (data, callback) => {
             - siunciam patvirtinimo laiska
         - jei nepavyko - error
     */
-
-    console.log(payload);
+        const [createErr] = await file.create('accounts', email + '.json', payload);
+    if (createErr) {
+        return callback(500, {
+            msg: 'Nepavyko sukurti paskyrtos del vidines serverio klaidos. Pabandykite veliau',
+        })
+    }
 
     return callback(200, {
         msg: 'Paskyra sukurta sekmingai',
