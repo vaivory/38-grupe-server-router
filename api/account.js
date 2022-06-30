@@ -85,7 +85,14 @@ handler._innerMethods.post = async (data, callback) => {
             - siunciam patvirtinimo laiska
         - jei nepavyko - error
     */
-        const [createErr] = await file.create('accounts', email + '.json', payload);
+    delete payload.pass;
+    payload.hashedPassword = utils.hash(pass)[1]; //musu uzshifruotas passwordas
+    payload.lastLoginDate = 0;
+    payload.registrationDate = Date.now();
+    payload.IPaddress='';
+    payload.browser='';
+
+    const [createErr] = await file.create('accounts', email + '.json', payload);  //cia bus visas musu atsiustas objektas
     if (createErr) {
         return callback(500, {
             msg: 'Nepavyko sukurti paskyrtos del vidines serverio klaidos. Pabandykite veliau',
@@ -134,25 +141,121 @@ handler._innerMethods.get = async (data, callback) => {
         });
     }
 
-    delete userData.pass;
+    delete userData.hashedPassword;
 
     return callback(200, {
         msg: userData,
     });
 }
 
-// PUT (kapitalinis info pakeistimas)
+// PUT (kapitalinis info pakeitimas)
 // PATCH (vienos info dalies pakeitimas)
-handler._innerMethods.put = (data, callback) => {
+// Leidziam pasikeisti tik: fullname, pass -> hashedPassword
+handler._innerMethods.put = async (data, callback) => {
+    const { payload } = data;  //ka uploadina klientas
+    const email = data.searchParams.get('email');
+
+    const [emailErr, emailMsg] = IsValid.email(email);
+    if (emailErr) {
+        return callback(400, {
+            msg: emailMsg,
+        });
+    }
+
+    const [validErr, validMsg] = utils.objectValidator(payload, {
+        optional: ['fullname', 'pass'],
+    });
+
+    if (validErr) {
+        return callback(400, {
+            msg: validMsg,
+        });
+    }
+
+    const { fullname, pass } = payload;
+
+    //console.log(fullname, pass);
+
+    if (fullname) {
+        const [fullnameErr, fullnameMsg] = IsValid.fullname(fullname);
+        if (fullnameErr) {
+            return callback(400, {
+                msg: fullnameMsg,
+            });
+        }
+    }
+
+    if (pass) {
+        const [passErr, passMsg] = IsValid.password(pass);
+        if (passErr) {
+            return callback(400, {
+                msg: passMsg,
+            });
+        }
+    }
+
+    const [readErr, readMsg] = await file.read('accounts', email + '.json');
+    if (readErr) {
+        return callback(404, {
+            msg: 'Toks vartotojas neegzistouja, arba nepavyko gauti duomenu del teisiu trukumo',
+        });
+    }
+
+    const [parseErr, userData] = utils.parseJSONtoObject(readMsg);
+    if (parseErr) {
+        return callback(500, {
+            msg: 'Nepavyko atnaujinti paskyros informacijos, del vidines serverio klaidos',
+        });
+    }
+
+    if (fullname) {
+        userData.fullname = fullname;
+    }
+
+    if (pass) {
+        userData.pass = utils.hash(pass)[1];
+    }
+
+
+    const [updateErr] = await file.update('accounts', email + '.json', userData);
+
+    if (updateErr) {
+        return callback(500, {
+            msg: 'Nepavyko atnaujinti paskyros informacijos, del vidines serverio klaidos',
+        })
+    }
+
     return callback(200, {
-        msg: 'Account: put',
+        msg: 'Vartotojo informacija sekmingai atnaujinta',
     });
 }
 
 // DELETE
-handler._innerMethods.delete = (data, callback) => {
+
+handler._innerMethods.delete = async (data, callback) => {
+    //1. Gauti emaila is nuorodos
+    const email = data.searchParams.get('email');
+    console.log(email);
+
+    //2. Patikrinam ar tikrai gavom emaila
+
+    const [emailErr, emailMsg] = IsValid.email(email);
+    if (emailErr) {
+        return callback(400, {
+            msg: emailMsg,
+        });
+    }
+    //3. Jei geras emailas tuomet trinam
+    const [deleteErr] = await file.delete('accounts', email + '.json');
+
+    if (deleteErr) {
+        return callback(500, {
+            msg: 'Nepavyko istrinti paskyros informacijos, del vidines serverio klaidos',
+        })
+    }
+
     return callback(200, {
-        msg: 'Account: delete',
+        msg: 'Paskyra istrinta sekmingai',
     });
 }
 
