@@ -53,7 +53,15 @@ if (submitDOM) {
                 },
                 body: JSON.stringify(data),
             });
-            const res = await response.json();
+            const resBody = await response.json();
+
+            notificationsDOM.innerText = resBody.msg;
+            notificationsDOM.classList.add('show');
+            if (response.ok) {
+                notificationsDOM.classList.add('success');
+            } else {
+                notificationsDOM.classList.remove('success');
+            }
 
             console.log(res);
         }
