@@ -24,6 +24,7 @@ handler._innerMethods = {};
 handler._innerMethods.post = async (data, callback) => {
     const { payload } = data;
 
+    
     /*
     1) patikrinti, ar teisinga info (payload):
         - email
