@@ -53,6 +53,7 @@ if (submitDOM) {
                 },
                 body: JSON.stringify(data),
             });
+
             const resBody = await response.json();
 
             notificationsDOM.innerText = resBody.msg;
@@ -63,7 +64,7 @@ if (submitDOM) {
                 notificationsDOM.classList.remove('success');
             }
 
-            console.log(res);
+
         }
 
         // tikriname ar laukai ne tusti

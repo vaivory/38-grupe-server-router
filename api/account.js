@@ -105,13 +105,6 @@ handler._innerMethods.post = async (data, callback) => {
     });
 }
 
-// PUT (kapitalinis info pakeistimas) / PATCH (vienos info dalies pakeitimas)
-handler._innerMethods.put = (data, callback) => {
-    return callback(200, {
-        msg: 'Account: put',
-    });
-}
-
 // GET
 handler._innerMethods.get = async (data, callback) => {
 
