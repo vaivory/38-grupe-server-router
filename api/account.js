@@ -24,7 +24,7 @@ handler._innerMethods = {};
 handler._innerMethods.post = async (data, callback) => {
     const { payload } = data;
 
-    
+
     /*
     1) patikrinti, ar teisinga info (payload):
         - email
@@ -90,8 +90,8 @@ handler._innerMethods.post = async (data, callback) => {
     payload.hashedPassword = utils.hash(pass)[1]; //musu uzshifruotas passwordas
     payload.lastLoginDate = 0;
     payload.registrationDate = Date.now();
-    payload.IPaddress='';
-    payload.browser='';
+    payload.IPaddress = '';
+    payload.browser = data.user.browser;
 
     const [createErr] = await file.create('accounts', email + '.json', payload);  //cia bus visas musu atsiustas objektas
     if (createErr) {
