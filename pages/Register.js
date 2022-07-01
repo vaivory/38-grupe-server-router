@@ -4,7 +4,8 @@ import config from '../config.js';
 class PageRegister extends PageTemplate {
     constructor(data) {
         super(data);
-        this.pageCSSfileName = 'register';
+        // this.pageCSSfileName = 'register';
+        this.pageCSSfileName = 'auth';
         this.pageJSfileName = 'register';
     }
 
