@@ -49,6 +49,7 @@ if (submitDOM) {
             } else {
                 notificationsDOM.classList.remove('success');
             }
-
+        
         }
     })
+}
