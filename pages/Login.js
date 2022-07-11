@@ -17,7 +17,7 @@ class PageLogin extends PageTemplate {
         return `<div class="row">
                     <h1>Login</h1>
                     <p>Login to get exited!</p>
-                    <form class="form" action="/api/account" method="POST">
+                    <form class="form" action="/api/token" method="POST">
                         <div class="notifications"></div>
                         <label for="email">Email</label>
                         <input id="email" name="email" data-validation="email" type="email" placeholder="Enter value..."
