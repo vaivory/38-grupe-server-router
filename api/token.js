@@ -2,6 +2,7 @@ import { file } from "../lib/file.js";
 import { IsValid } from "../lib/is-valid/IsValid.js";
 import { utils } from "../lib/utils.js";
 import config from "../config.js";
+import { ApiResponse } from "../lib/ApiResponse.js";
 
 //leidimas dirbti su privacia informacija kai login atliktas
 
@@ -23,7 +24,7 @@ handler.token = async (data, callback) => {
 
 handler._innerMethods = {};
 
-// POST - sukuriame paskyra
+// POST - sukuriame paskyra, isduodame prisijungima patvirtinanti token'a
 handler._innerMethods.post = async (data, callback) => {
 //1.Duomenu patikrinimas
  /*
@@ -35,6 +36,10 @@ handler._innerMethods.post = async (data, callback) => {
     */
 
         const { payload } = data;
+        if (data.user.isLoggedIn) {
+            return callback(200, ApiResponse.redirect('/'));
+        }
+    
 
         /*
         1) patikrinti, ar teisinga info (payload):
@@ -48,60 +53,39 @@ handler._innerMethods.post = async (data, callback) => {
         });
     
         if (validErr) {
-            return callback(400, {
-                msgType: 'error',
-                msg: validMsg,
-            });
+            return callback(400, ApiResponse.error(validMsg));
         }
     
         const { email, pass } = payload;
     
         const [emailErr, emailMsg] = IsValid.email(email);
         if (emailErr) {
-            return callback(400, {
-                msgType: 'error',
-                msg: emailMsg,
-            });
+            return callback(400, ApiResponse.error(emailMsg));
         }
     
         const [passErr, passMsg] = IsValid.password(pass);
         if (passErr) {
-            return callback(400, {
-                msgType: 'error',
-                msg: passMsg,
-            });
+            return callback(400, ApiResponse.error(passMsg));
         }
     
         // 2. Patikrinti ar egzistuoja account
         const [readErr, readMsg] = await file.read('accounts', email + '.json');
     if (readErr) {
-        return callback(400, {
-            msgType: 'error',
-            msg: 'Vartotojas nerastas, arba neteisingas slaptazodis',
-        });
+        return callback(400, ApiResponse.error('Vartotojas nerastas, arba neteisingas slaptazodis'));
     }
 
     const [parseErr, userObject] = utils.parseJSONtoObject(readMsg);
     if (parseErr) {
-        return callback(500, {
-            msgType: 'error',
-            msg: 'Nepavyko atlikti vartotojo informacijos paieskos',
-        });
+        return callback(500, ApiResponse.error('Nepavyko atlikti vartotojo informacijos paieskos'));
     }
 
     const [hashErr, hashedLoginPassword] = utils.hash(pass);
     if (hashErr) {
-        return callback(500, {
-            msgType: 'error',
-            msg: 'Nepavyko atlikti vartotojo informacijos paieskos',
-        });
+        return callback(500, ApiResponse.error('Nepavyko atlikti vartotojo informacijos paieskos'));
     }
 
     if (hashedLoginPassword !== userObject.hashedPassword) {
-        return callback(400, {
-            msgType: 'error',
-            msg: 'Vartotojas nerastas, arba neteisingas slaptazodis',
-        });
+        return callback(400, ApiResponse.error('Vartotojas nerastas, arba neteisingas slaptazodis'));
     }
 
         // 3. Suteikti prieiga prie sistemos
@@ -114,10 +98,7 @@ handler._innerMethods.post = async (data, callback) => {
 
     const [createErr] = await file.create('token', randomToken + '.json', tokenObject);
     if (createErr) {
-        return callback(500, {
-            msgType: 'error',
-            msg: 'Nepavyko sukurti vartotojo sesijos',
-        });
+           return callback(500, ApiResponse.error('Nepavyko sukurti vartotojo sesijos'));
     }
 
     const cookies = [
@@ -131,9 +112,8 @@ handler._innerMethods.post = async (data, callback) => {
         'HttpOnly',
     ];
     
-    return callback(200, {
-        msgType: 'success',
-        msg: 'Token sukurtas sekmingai',
+    return callback(200, ApiResponse.redirect('/'), {
+        'Set-Cookie': cookies.join('; '),
     });
 }
 
