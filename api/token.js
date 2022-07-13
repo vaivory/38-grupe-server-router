@@ -49,6 +49,7 @@ handler._innerMethods.post = async (data, callback) => {
     
         if (validErr) {
             return callback(400, {
+                msgType: 'error',
                 msg: validMsg,
             });
         }
@@ -58,6 +59,7 @@ handler._innerMethods.post = async (data, callback) => {
         const [emailErr, emailMsg] = IsValid.email(email);
         if (emailErr) {
             return callback(400, {
+                msgType: 'error',
                 msg: emailMsg,
             });
         }
@@ -65,6 +67,7 @@ handler._innerMethods.post = async (data, callback) => {
         const [passErr, passMsg] = IsValid.password(pass);
         if (passErr) {
             return callback(400, {
+                msgType: 'error',
                 msg: passMsg,
             });
         }
@@ -73,6 +76,7 @@ handler._innerMethods.post = async (data, callback) => {
         const [readErr, readMsg] = await file.read('accounts', email + '.json');
     if (readErr) {
         return callback(400, {
+            msgType: 'error',
             msg: 'Vartotojas nerastas, arba neteisingas slaptazodis',
         });
     }
@@ -80,6 +84,7 @@ handler._innerMethods.post = async (data, callback) => {
     const [parseErr, userObject] = utils.parseJSONtoObject(readMsg);
     if (parseErr) {
         return callback(500, {
+            msgType: 'error',
             msg: 'Nepavyko atlikti vartotojo informacijos paieskos',
         });
     }
@@ -87,12 +92,14 @@ handler._innerMethods.post = async (data, callback) => {
     const [hashErr, hashedLoginPassword] = utils.hash(pass);
     if (hashErr) {
         return callback(500, {
+            msgType: 'error',
             msg: 'Nepavyko atlikti vartotojo informacijos paieskos',
         });
     }
 
     if (hashedLoginPassword !== userObject.hashedPassword) {
         return callback(400, {
+            msgType: 'error',
             msg: 'Vartotojas nerastas, arba neteisingas slaptazodis',
         });
     }
@@ -108,6 +115,7 @@ handler._innerMethods.post = async (data, callback) => {
     const [createErr] = await file.create('token', randomToken + '.json', tokenObject);
     if (createErr) {
         return callback(500, {
+            msgType: 'error',
             msg: 'Nepavyko sukurti vartotojo sesijos',
         });
     }
@@ -124,6 +132,7 @@ handler._innerMethods.post = async (data, callback) => {
     ];
     
     return callback(200, {
+        msgType: 'success',
         msg: 'Token sukurtas sekmingai',
     });
 }
@@ -134,6 +143,7 @@ handler._innerMethods.get = async (data, callback) => {
 
 
     return callback(200, {
+        msgType: 'success',
         msg: 'Token informacija',
     }, {
         'Set-Cookie': cookies.join('; '),
@@ -146,6 +156,7 @@ handler._innerMethods.put = async (data, callback) => {
 
 
     return callback(200, {
+        msgType: 'success',
         msg: 'Token informacija sekmingai atnaujinta',
     });
 }
@@ -156,6 +167,7 @@ handler._innerMethods.delete = async (data, callback) => {
 
 
     return callback(200, {
+        msgType: 'success',
         msg: 'Token istrintas sekmingai',
     });
 }
